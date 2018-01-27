@@ -9,6 +9,9 @@ public class SpringBatchExampleApplication {
 
     public static void main(String[] args) {
 
+        Runtime.getRuntime()
+                .addShutdownHook(new Thread(() -> System.out.println("Exiting JVM...")));
+
         SpringApplication.run(SpringBatchExampleApplication.class, args);
 
     }
