@@ -6,7 +6,6 @@ import com.chriniko.springbatchexample.listener.PerformanceLoggingStepExecutionL
 import com.chriniko.springbatchexample.processor.InsuranceItemProcessor;
 import com.chriniko.springbatchexample.reader.InsuranceItemReader;
 import com.chriniko.springbatchexample.writer.InsuranceItemWriter;
-import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -21,14 +20,10 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
-import org.springframework.core.task.TaskDecorator;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.sql.DataSource;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
 @EnableBatchProcessing
@@ -41,7 +36,10 @@ public class BatchConfiguration {
     private StepBuilderFactory steps;
 
     @Value("${max.threads.for.insurances.step}")
-    private int maxThreads;
+    private int maxThreadsForInsurances;
+
+    @Value("${insurances.chunk.size}")
+    private int insurancesChunkSize;
 
     //TODO USE THEM SOMEHOW IN THIS EXAMPLE...
 //    a JobRepository (bean name "jobRepository")
@@ -51,78 +49,34 @@ public class BatchConfiguration {
 //    a org.springframework.batch.core.explore.JobExplorer (bean name "jobExplorer")
 //    a PlatformTransactionManager (bean name "transactionManager")
 
-    @Bean
-    public CountDownLatch countDownLatchForTaskExecutor() {
-        return new CountDownLatch(1); // Note: the number should be equal to the number of the jobs that spring batch has to execute.
-    }
 
     @Bean
-    public TaskExecutor taskExecutor() {
-
-        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-
-        taskExecutor.setCorePoolSize(50);
-        taskExecutor.setMaxPoolSize(100);
-
-        taskExecutor.setAllowCoreThreadTimeOut(false);
-        taskExecutor.setKeepAliveSeconds(7);
-
-        taskExecutor.setQueueCapacity(0);
-
-        taskExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        taskExecutor.setThreadNamePrefix("spring-batch-worker");
-
-        return taskExecutor;
-    }
-
-    @Qualifier("hikari")
-    @Bean
-    public JdbcTemplate jdbcTemplate() {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate();
-
-        jdbcTemplate.setDataSource(dataSource());
-
-        return jdbcTemplate;
-    }
-
-    @Qualifier("hikari")
-    @Bean
-    public DataSource dataSource() {
-        HikariDataSource dataSource = new HikariDataSource();
-
-        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
-        dataSource.setJdbcUrl("jdbc:mysql://localhost/spring_batch_example?useSSL=false");
-        dataSource.setUsername("root");
-        dataSource.setPassword("nikos");
-
-        return dataSource;
-    }
-
-    @Bean
-    public Job job() {
+    public Job job(@Qualifier("hikari") @Autowired DataSource dataSource,
+                   @Autowired TaskExecutor taskExecutor,
+                   @Qualifier("hikari") @Autowired JdbcTemplate jdbcTemplate) {
         return jobs.get("exportInsurances")
                 .incrementer(new RunIdIncrementer())
-                .flow(insurancesFromCsvToDbStep())
+                .flow(insurancesFromCsvToDbStep(dataSource, taskExecutor))
                 //TODO add one more step...
                 .end()
-                .listener(exportInsurancesVerificationListener()) //TODO rename this listener to a proper name...
+                .listener(exportInsurancesVerificationListener(jdbcTemplate)) //TODO rename this listener to a proper name...
                 .build();
     }
 
 
     // ----------------------- START: begin of step declaration -----------------------------
     @Bean
-    protected Step insurancesFromCsvToDbStep() {
+    protected Step insurancesFromCsvToDbStep(DataSource dataSource, TaskExecutor taskExecutor) {
         return steps
                 .get("insurancesFromCsvToDbStep")
-                .<Insurance, Insurance>chunk(200)
+                .<Insurance, Insurance>chunk(insurancesChunkSize)
                 .reader(insuranceItemReader())
                 .processor(insuranceItemProcessor())
-                .writer(insuranceJdbcBatchItemWriter())
+                .writer(insuranceJdbcBatchItemWriter(dataSource))
                 .listener(performanceLoggingStepExecutionListener())
                 //TODO add more listeners...
-                .taskExecutor(taskExecutor())
-                .throttleLimit(maxThreads)
+                .taskExecutor(taskExecutor)
+                .throttleLimit(maxThreadsForInsurances)
                 .build();
     }
 
@@ -137,8 +91,9 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public JdbcBatchItemWriter<Insurance> insuranceJdbcBatchItemWriter() {
-        return new InsuranceItemWriter(dataSource());
+    public JdbcBatchItemWriter<Insurance> insuranceJdbcBatchItemWriter(@Qualifier("hikari")
+                                                                       @Autowired DataSource dataSource) {
+        return new InsuranceItemWriter(dataSource);
     }
     // -------------------------- END: begin of step declaration -----------------------------
 
@@ -149,8 +104,9 @@ public class BatchConfiguration {
 
     // ----------------------- START: begin of util for steps -----------------------------
     @Bean
-    public ExportInsurancesVerificationListener exportInsurancesVerificationListener() {
-        return new ExportInsurancesVerificationListener(jdbcTemplate());
+    public ExportInsurancesVerificationListener exportInsurancesVerificationListener(@Qualifier("hikari")
+                                                                                     @Autowired JdbcTemplate jdbcTemplate) {
+        return new ExportInsurancesVerificationListener(jdbcTemplate);
     }
 
     @Bean

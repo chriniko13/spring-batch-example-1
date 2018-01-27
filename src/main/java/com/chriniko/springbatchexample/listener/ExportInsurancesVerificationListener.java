@@ -57,6 +57,7 @@ public class ExportInsurancesVerificationListener implements JobExecutionListene
                         }
                     });
 
+            System.out.println(Thread.currentThread().getName() + " --- ExportInsurancesVerificationListener#afterJob --- going to publish event: JobFinishedEvent");
             applicationEventPublisher.publishEvent(new JobFinishedEvent(this, jobExecution.getJobConfigurationName()));
         }
     }

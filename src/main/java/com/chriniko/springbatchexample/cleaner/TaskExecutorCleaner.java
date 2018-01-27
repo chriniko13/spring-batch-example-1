@@ -25,9 +25,9 @@ public class TaskExecutorCleaner {
 
             try {
 
-                System.out.println("TaskExecutorCleaner#init --- will wait until all jobs finished and then will shutdown executor.");
+                System.out.println(Thread.currentThread().getName() + " --- TaskExecutorCleaner#init --- will wait until all jobs finished and then will shutdown executor.");
                 countDownLatchForTaskExecutor.await();
-                System.out.println("TaskExecutorCleaner#init --- all jobs finished, shutting down executor....");
+                System.out.println(Thread.currentThread().getName() + " --- TaskExecutorCleaner#init --- all jobs finished, shutting down executor....");
 
                 ((ThreadPoolTaskExecutor) taskExecutor).shutdown();
             } catch (InterruptedException e) {
