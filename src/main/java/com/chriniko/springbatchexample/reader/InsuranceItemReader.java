@@ -18,20 +18,24 @@ public class InsuranceItemReader implements ItemReader<Insurance> {
 
     private BufferedReader bufferedReader;
 
+    private static final Object __MUTEX = new Object();
+
     public InsuranceItemReader() {
 
         try {
-            lineNo = 1;
+            synchronized (__MUTEX) {
+                lineNo = 1;
 
-            URI uri = Optional
-                    .ofNullable(getClass().getClassLoader().getResource("files/FL_insurance_sample.csv"))
-                    .orElseThrow(IllegalStateException::new)
-                    .toURI();
+                URI uri = Optional
+                        .ofNullable(getClass().getClassLoader().getResource("files/FL_insurance_sample.csv"))
+                        .orElseThrow(IllegalStateException::new)
+                        .toURI();
 
-            bufferedReader = Files.newBufferedReader(Paths.get(uri));
+                bufferedReader = Files.newBufferedReader(Paths.get(uri));
 
-            while (lineNo++ <= linesToSkip) {
-                bufferedReader.readLine(); // Note: toss-skip line.
+                while (lineNo++ <= linesToSkip) {
+                    bufferedReader.readLine(); // Note: toss-skip line.
+                }
             }
 
         } catch (Exception e) {
@@ -43,7 +47,11 @@ public class InsuranceItemReader implements ItemReader<Insurance> {
     @Override
     public Insurance read() throws Exception {
 
-        String line = bufferedReader.readLine();
+        String line;
+        synchronized (__MUTEX) {
+            line = bufferedReader.readLine();
+        }
+
         if (line == null || line.isEmpty()) {
             return null;
         }

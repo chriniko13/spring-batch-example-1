@@ -1,8 +1,11 @@
 package com.chriniko.springbatchexample.listener;
 
+import com.chriniko.springbatchexample.event.JobFinishedEvent;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 
@@ -13,7 +16,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 
-public class ExportInsurancesVerificationListener implements JobExecutionListener {
+public class ExportInsurancesVerificationListener implements JobExecutionListener, ApplicationEventPublisherAware {
+
+    private ApplicationEventPublisher applicationEventPublisher;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -51,6 +56,8 @@ public class ExportInsurancesVerificationListener implements JobExecutionListene
                             }
                         }
                     });
+
+            applicationEventPublisher.publishEvent(new JobFinishedEvent(this, jobExecution.getJobConfigurationName()));
         }
     }
 
@@ -68,5 +75,10 @@ public class ExportInsurancesVerificationListener implements JobExecutionListene
         } catch (Exception error) {
             throw new RuntimeException(error);
         }
+    }
+
+    @Override
+    public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 }
