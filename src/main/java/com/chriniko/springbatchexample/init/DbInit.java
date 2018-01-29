@@ -53,6 +53,31 @@ public class DbInit {
                 "  processed        TINYINT(1)   NULL\n" +
                 ")\n" +
                 "  ENGINE = InnoDB;");
+
+
+        //drop table if exists...
+        jdbcTemplate.execute("DROP TABLE IF EXISTS spring_batch_example.star_dataset_tbl");
+
+
+        //create table if not exists...
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS spring_batch_example.star_dataset_tbl\n" +
+                "(\n" +
+                "  charge    DECIMAL    NULL,\n" +
+                "  clus      BIGINT     NULL,\n" +
+                "  dst       BIGINT     NULL,\n" +
+                "  enumber   BIGINT     NULL,\n" +
+                "  etime     DECIMAL    NULL,\n" +
+                "  hist      DECIMAL     NULL,\n" +
+                "  nlb       BIGINT     NULL,\n" +
+                "  qxb       DECIMAL    NULL,\n" +
+                "  rnumber   BIGINT     NULL,\n" +
+                "  tracks    BIGINT     NULL,\n" +
+                "  vertex    DECIMAL    NULL,\n" +
+                "  zdc       BIGINT     NULL,\n" +
+                "  processed TINYINT(1) NULL\n" +
+                ")\n" +
+                "  ENGINE = InnoDB;");
+
     }
 
 }

@@ -28,10 +28,10 @@ public class PerformanceLoggingStepExecutionListener implements StepExecutionLis
             long totalTimeInMs = TimeUnit.MILLISECONDS.convert(totalTimeInNanos, TimeUnit.NANOSECONDS);
             long totalTimeInS = TimeUnit.SECONDS.convert(totalTimeInNanos, TimeUnit.NANOSECONDS);
 
-            System.out.println("[stepName = " + stepName + "] --- total time: " + totalTimeInMs + "ms, " + totalTimeInS + "s");
+            System.out.println("\n[stepName = " + stepName + "] --- total time: " + totalTimeInMs + "ms, " + totalTimeInS + "s" + "\n");
 
         } else {
-            System.out.println("[stepName = " + stepName + "] --- execution not completed, exit status = " + exitStatus);
+            System.out.println("\n[stepName = " + stepName + "] --- execution not completed, exit status = " + exitStatus + "\n");
         }
 
 

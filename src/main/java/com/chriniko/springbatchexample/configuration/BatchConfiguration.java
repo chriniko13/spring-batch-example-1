@@ -1,11 +1,15 @@
 package com.chriniko.springbatchexample.configuration;
 
 import com.chriniko.springbatchexample.domain.Insurance;
+import com.chriniko.springbatchexample.domain.StarDataset;
 import com.chriniko.springbatchexample.listener.ExportInsurancesVerificationListener;
 import com.chriniko.springbatchexample.listener.PerformanceLoggingStepExecutionListener;
 import com.chriniko.springbatchexample.processor.InsuranceItemProcessor;
+import com.chriniko.springbatchexample.processor.StarDatasetItemProcessor;
 import com.chriniko.springbatchexample.reader.InsuranceItemReader;
+import com.chriniko.springbatchexample.reader.StarDatasetReader;
 import com.chriniko.springbatchexample.writer.InsuranceItemWriter;
+import com.chriniko.springbatchexample.writer.StarDatasetItemWriter;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -57,6 +61,7 @@ public class BatchConfiguration {
         return jobs.get("exportInsurances")
                 .incrementer(new RunIdIncrementer())
                 .flow(insurancesFromCsvToDbStep(dataSource, taskExecutor))
+                .next(starDatasetsFromCsvToDbStep(taskExecutor))
                 //TODO add one more step...
                 .end()
                 .listener(exportInsurancesVerificationListener(jdbcTemplate)) //TODO rename this listener to a proper name...
@@ -99,6 +104,35 @@ public class BatchConfiguration {
 
 
     // ----------------------- START: begin of step declaration -----------------------------
+    @Bean
+    public Step starDatasetsFromCsvToDbStep(TaskExecutor taskExecutor) {
+        return steps
+                .get("starDatasetsFromCsvToDbStep")
+                .<StarDataset, StarDataset>chunk(300) //TODO extract it to value
+                .reader(starDatasetReader())
+                .processor(starDatasetItemProcessor())
+                .writer(starDatasetItemWriter())
+                .listener(performanceLoggingStepExecutionListener())
+                //TODO add more listeners...
+                .taskExecutor(taskExecutor)
+                .throttleLimit(70) //TODO extract it to value
+                .build();
+    }
+
+    @Bean
+    public StarDatasetReader starDatasetReader() {
+        return new StarDatasetReader();
+    }
+
+    @Bean
+    public StarDatasetItemProcessor starDatasetItemProcessor() {
+        return new StarDatasetItemProcessor();
+    }
+
+    @Bean
+    public StarDatasetItemWriter starDatasetItemWriter() {
+        return new StarDatasetItemWriter();
+    }
     // ------------------------- END: begin of step declaration -----------------------------
 
 

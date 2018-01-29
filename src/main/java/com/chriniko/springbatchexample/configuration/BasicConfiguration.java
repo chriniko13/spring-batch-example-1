@@ -1,12 +1,16 @@
 package com.chriniko.springbatchexample.configuration;
 
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
 import java.util.concurrent.CountDownLatch;
@@ -25,13 +29,13 @@ public class BasicConfiguration {
 
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 
-        taskExecutor.setCorePoolSize(50);
-        taskExecutor.setMaxPoolSize(100);
+        taskExecutor.setCorePoolSize(70);
+        taskExecutor.setMaxPoolSize(140);
 
         taskExecutor.setAllowCoreThreadTimeOut(false);
         taskExecutor.setKeepAliveSeconds(7);
 
-        taskExecutor.setQueueCapacity(0);
+        taskExecutor.setQueueCapacity(200);
 
         taskExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         taskExecutor.setThreadNamePrefix("spring-batch-worker");
@@ -52,14 +56,28 @@ public class BasicConfiguration {
     @Qualifier("hikari")
     @Bean
     public DataSource dataSource() {
-        HikariDataSource dataSource = new HikariDataSource();
 
-        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
-        dataSource.setJdbcUrl("jdbc:mysql://localhost/spring_batch_example?useSSL=false");
-        dataSource.setUsername("root");
-        dataSource.setPassword("nikos");
+        HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setMaximumPoolSize(130);
+        hikariConfig.setUsername("root");
+        hikariConfig.setPassword("nikos");
+        hikariConfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        hikariConfig.setJdbcUrl("jdbc:mysql://localhost/spring_batch_example?useSSL=false");
 
-        return dataSource;
+        return new HikariDataSource(hikariConfig);
     }
 
+    @Qualifier("hikari")
+    @Bean
+    public TransactionTemplate transactionTemplate() {
+        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dataSource());
+
+        TransactionTemplate transactionTemplate = new TransactionTemplate(dataSourceTransactionManager);
+
+        transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_UNCOMMITTED);
+        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        transactionTemplate.setReadOnly(false);
+
+        return transactionTemplate;
+    }
 }
