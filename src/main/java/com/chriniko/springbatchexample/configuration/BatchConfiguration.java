@@ -61,9 +61,8 @@ public class BatchConfiguration {
                 .incrementer(new RunIdIncrementer())
                 .flow(insurancesFromCsvToDbStep(taskExecutor))
                 .next(starDatasetsFromCsvToDbStep(taskExecutor))
-                //TODO add one more step...
                 .end()
-                .listener(exportInsurancesVerificationListener(jdbcTemplate)) //TODO rename this listener to a proper name...
+                .listener(exportInsurancesVerificationListener()) //TODO rename this listener to a proper name...
                 .build();
     }
 
@@ -136,9 +135,8 @@ public class BatchConfiguration {
 
     // ----------------------- START: begin of util for steps -----------------------------
     @Bean
-    public ExportInsurancesVerificationListener exportInsurancesVerificationListener(@Qualifier("hikari")
-                                                                                     @Autowired JdbcTemplate jdbcTemplate) {
-        return new ExportInsurancesVerificationListener(jdbcTemplate);
+    public ExportInsurancesVerificationListener exportInsurancesVerificationListener() {
+        return new ExportInsurancesVerificationListener();
     }
 
     @Bean

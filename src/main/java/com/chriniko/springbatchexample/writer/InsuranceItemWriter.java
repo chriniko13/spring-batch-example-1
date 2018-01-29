@@ -6,6 +6,7 @@ import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 public class InsuranceItemWriter extends JdbcBatchItemWriter<Insurance> {
@@ -14,8 +15,8 @@ public class InsuranceItemWriter extends JdbcBatchItemWriter<Insurance> {
     @Autowired
     private DataSource dataSource;
 
-    public InsuranceItemWriter() {
-        super();
+    @PostConstruct
+    public void init() {
 
         this.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
         this.setSql("INSERT INTO insurance_tbl (policyId, stateCode, " +

@@ -1,31 +1,27 @@
 package com.chriniko.springbatchexample.listener;
 
 import com.chriniko.springbatchexample.event.JobFinishedEvent;
+import com.chriniko.springbatchexample.verifier.StepVerifier;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowCallbackHandler;
 
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 //TODO rename class.
 public class ExportInsurancesVerificationListener implements JobExecutionListener, ApplicationEventPublisherAware {
 
     private ApplicationEventPublisher applicationEventPublisher;
 
-    private final JdbcTemplate jdbcTemplate;
-
-    public ExportInsurancesVerificationListener(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
+    @Autowired
+    private List<StepVerifier> stepVerifiers;
 
     @Override
     public void beforeJob(JobExecution jobExecution) {
@@ -37,47 +33,40 @@ public class ExportInsurancesVerificationListener implements JobExecutionListene
 
         if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
 
-            // Note: should check database records count if are the same with (csv file lines - 1).
+            final List<Map<Boolean, Optional<String>>> verifiersResults = stepVerifiers
+                    .stream()
+                    .map(StepVerifier::verify)
+                    .collect(Collectors.toList());
 
-            jdbcTemplate.query(
-                    "SELECT count(*) FROM spring_batch_example.insurance_tbl",
-                    new RowCallbackHandler() {
-                        @Override
-                        public void processRow(ResultSet rs) throws SQLException {
+            final Boolean allStepsOk = verifiersResults
+                    .stream()
+                    .flatMap(m -> m.keySet().stream())
+                    .reduce(true, (acc, elem) -> acc && elem);
 
-                            long totalRecordsOfInsuranceTable = rs.getLong(1);
+            if (!allStepsOk) {
+                System.out.println("\n ---Job with name: " + jobExecution.getJobInstance().getJobName() + " finished unsuccessfully ---");
 
-                            if (totalRecordsOfInsuranceTable != countLinesOfInsurancesCsvFile()) {
+                System.out.println("--- Error Messages ---");
+                verifiersResults
+                        .stream()
+                        .map(Map::values)
+                        .flatMap(Collection::stream)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .forEach(System.out::println);
 
-                                System.err.println("##### INSURANCES BATCH EXTRACTION NOT COMPLETED SUCCESSFULLY #####");
-                                throw new IllegalStateException("not correct insurances batch operation!");
+                System.out.println();
 
-                            } else {
-                                System.out.println("##### INSURANCES BATCH EXTRACTION COMPLETED SUCCESSFULLY #####");
-                            }
-                        }
-                    });
+            } else {
+                System.out.println("\n ---Job with name: " + jobExecution.getJobInstance().getJobName() + " finished successfully ---\n");
+            }
+
 
             System.out.println(Thread.currentThread().getName() + " --- ExportInsurancesVerificationListener#afterJob --- going to publish event: JobFinishedEvent");
             applicationEventPublisher.publishEvent(new JobFinishedEvent(this, jobExecution.getJobConfigurationName()));
         }
     }
 
-    private long countLinesOfInsurancesCsvFile() {
-
-        try {
-
-            URI uri = Optional
-                    .ofNullable(getClass().getClassLoader().getResource("files/FL_insurance_sample.csv"))
-                    .orElseThrow(IllegalStateException::new)
-                    .toURI();
-
-            return Files.lines(Paths.get(uri)).count() - 1; // Note: -1 is for headers line.
-
-        } catch (Exception error) {
-            throw new RuntimeException(error);
-        }
-    }
 
     @Override
     public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
