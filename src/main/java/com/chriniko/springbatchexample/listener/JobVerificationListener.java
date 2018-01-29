@@ -15,8 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-//TODO rename class.
-public class ExportInsurancesVerificationListener implements JobExecutionListener, ApplicationEventPublisherAware {
+public class JobVerificationListener implements JobExecutionListener, ApplicationEventPublisherAware {
 
     private ApplicationEventPublisher applicationEventPublisher;
 

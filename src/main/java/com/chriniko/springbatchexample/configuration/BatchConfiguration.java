@@ -2,7 +2,7 @@ package com.chriniko.springbatchexample.configuration;
 
 import com.chriniko.springbatchexample.domain.Insurance;
 import com.chriniko.springbatchexample.domain.StarDataset;
-import com.chriniko.springbatchexample.listener.ExportInsurancesVerificationListener;
+import com.chriniko.springbatchexample.listener.JobVerificationListener;
 import com.chriniko.springbatchexample.listener.PerformanceLoggingStepExecutionListener;
 import com.chriniko.springbatchexample.processor.InsuranceItemProcessor;
 import com.chriniko.springbatchexample.processor.StarDatasetItemProcessor;
@@ -62,7 +62,7 @@ public class BatchConfiguration {
                 .flow(insurancesFromCsvToDbStep(taskExecutor))
                 .next(starDatasetsFromCsvToDbStep(taskExecutor))
                 .end()
-                .listener(exportInsurancesVerificationListener()) //TODO rename this listener to a proper name...
+                .listener(jobVerificationListener())
                 .build();
     }
 
@@ -135,8 +135,8 @@ public class BatchConfiguration {
 
     // ----------------------- START: begin of util for steps -----------------------------
     @Bean
-    public ExportInsurancesVerificationListener exportInsurancesVerificationListener() {
-        return new ExportInsurancesVerificationListener();
+    public JobVerificationListener jobVerificationListener() {
+        return new JobVerificationListener();
     }
 
     @Bean
