@@ -77,6 +77,7 @@ public class BasicConfiguration {
         transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_UNCOMMITTED);
         transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         transactionTemplate.setReadOnly(false);
+        transactionTemplate.setTimeout(10);
 
         return transactionTemplate;
     }

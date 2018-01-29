@@ -16,7 +16,6 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,7 +59,7 @@ public class BatchConfiguration {
                    @Qualifier("hikari") @Autowired JdbcTemplate jdbcTemplate) {
         return jobs.get("exportInsurances")
                 .incrementer(new RunIdIncrementer())
-                .flow(insurancesFromCsvToDbStep(dataSource, taskExecutor))
+                .flow(insurancesFromCsvToDbStep(taskExecutor))
                 .next(starDatasetsFromCsvToDbStep(taskExecutor))
                 //TODO add one more step...
                 .end()
@@ -71,13 +70,13 @@ public class BatchConfiguration {
 
     // ----------------------- START: begin of step declaration -----------------------------
     @Bean
-    protected Step insurancesFromCsvToDbStep(DataSource dataSource, TaskExecutor taskExecutor) {
+    protected Step insurancesFromCsvToDbStep(TaskExecutor taskExecutor) {
         return steps
                 .get("insurancesFromCsvToDbStep")
                 .<Insurance, Insurance>chunk(insurancesChunkSize)
                 .reader(insuranceItemReader())
                 .processor(insuranceItemProcessor())
-                .writer(insuranceJdbcBatchItemWriter(dataSource))
+                .writer(insuranceJdbcBatchItemWriter())
                 .listener(performanceLoggingStepExecutionListener())
                 //TODO add more listeners...
                 .taskExecutor(taskExecutor)
@@ -96,9 +95,8 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public JdbcBatchItemWriter<Insurance> insuranceJdbcBatchItemWriter(@Qualifier("hikari")
-                                                                       @Autowired DataSource dataSource) {
-        return new InsuranceItemWriter(dataSource);
+    public InsuranceItemWriter insuranceJdbcBatchItemWriter() {
+        return new InsuranceItemWriter();
     }
     // -------------------------- END: begin of step declaration -----------------------------
 
@@ -108,14 +106,14 @@ public class BatchConfiguration {
     public Step starDatasetsFromCsvToDbStep(TaskExecutor taskExecutor) {
         return steps
                 .get("starDatasetsFromCsvToDbStep")
-                .<StarDataset, StarDataset>chunk(300) //TODO extract it to value
+                .<StarDataset, StarDataset>chunk(500) //TODO extract it to value
                 .reader(starDatasetReader())
                 .processor(starDatasetItemProcessor())
                 .writer(starDatasetItemWriter())
                 .listener(performanceLoggingStepExecutionListener())
                 //TODO add more listeners...
                 .taskExecutor(taskExecutor)
-                .throttleLimit(70) //TODO extract it to value
+                .throttleLimit(140) //TODO extract it to value
                 .build();
     }
 
