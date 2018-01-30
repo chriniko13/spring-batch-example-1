@@ -12,21 +12,20 @@ import com.chriniko.springbatchexample.writer.InsuranceItemWriter;
 import com.chriniko.springbatchexample.writer.StarDatasetItemWriter;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.DuplicateJobException;
+import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.configuration.support.ReferenceJobFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.jdbc.core.JdbcTemplate;
-
-import javax.sql.DataSource;
 
 @Configuration
 @EnableBatchProcessing
@@ -37,6 +36,9 @@ public class BatchConfiguration {
 
     @Autowired
     private StepBuilderFactory steps;
+
+    @Autowired
+    private JobRegistry jobRegistry;
 
     @Value("${max.threads.for.insurances.step}")
     private int maxThreadsForInsurances;
@@ -52,25 +54,28 @@ public class BatchConfiguration {
 
     //TODO USE THEM SOMEHOW IN THIS EXAMPLE...
 //    a JobRepository (bean name "jobRepository")
-//    a JobLauncher (bean name "jobLauncher")
-//    a JobRegistry (bean name "jobRegistry")
 //    a org.springframework.batch.core.launch.JobOperator (bean name "jobOperator")
 //    a org.springframework.batch.core.explore.JobExplorer (bean name "jobExplorer")
 //    a PlatformTransactionManager (bean name "transactionManager")
 
-
     @Bean
-    public Job job(@Qualifier("hikari") @Autowired DataSource dataSource,
-                   @Autowired TaskExecutor taskExecutor,
-                   @Qualifier("hikari") @Autowired JdbcTemplate jdbcTemplate) {
+    public Job job(@Autowired TaskExecutor taskExecutor) {
 
-        return jobs.get("exportJob")
+        Job exportJob = jobs.get("exportJob")
                 .incrementer(new RunIdIncrementer())
                 .flow(insurancesFromCsvToDbStep(taskExecutor))
                 .next(starDatasetsFromCsvToDbStep(taskExecutor))
                 .end()
                 .listener(jobVerificationListener())
                 .build();
+
+        try {
+            jobRegistry.register(new ReferenceJobFactory(exportJob));
+        } catch (DuplicateJobException e) {
+            throw new RuntimeException(e);
+        }
+
+        return exportJob;
     }
 
 
