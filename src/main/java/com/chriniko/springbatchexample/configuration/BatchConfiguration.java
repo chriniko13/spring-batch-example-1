@@ -77,8 +77,10 @@ public class BatchConfiguration {
     // ----------------------- START: begin of step declaration -----------------------------
     @Bean
     protected Step insurancesFromCsvToDbStep(TaskExecutor taskExecutor) {
+        final String insurancesFromCsvToDbStep = "insurancesFromCsvToDbStep";
+
         return steps
-                .get("insurancesFromCsvToDbStep")
+                .get(insurancesFromCsvToDbStep)
                 .<Insurance, Insurance>chunk(insurancesChunkSize)
                 .reader(insuranceItemReader())
                 .processor(insuranceItemProcessor())
@@ -110,8 +112,10 @@ public class BatchConfiguration {
     // ----------------------- START: begin of step declaration -----------------------------
     @Bean
     public Step starDatasetsFromCsvToDbStep(TaskExecutor taskExecutor) {
+        final String starDatasetsFromCsvToDbStep = "starDatasetsFromCsvToDbStep";
+
         return steps
-                .get("starDatasetsFromCsvToDbStep")
+                .get(starDatasetsFromCsvToDbStep)
                 .<StarDataset, StarDataset>chunk(maxThreadForDatasets)
                 .reader(starDatasetReader())
                 .processor(starDatasetItemProcessor())
