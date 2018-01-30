@@ -44,6 +44,12 @@ public class BatchConfiguration {
     @Value("${insurances.chunk.size}")
     private int insurancesChunkSize;
 
+    @Value("${max.threads.for.stardatasets.step}")
+    private int maxThreadForDatasets;
+
+    @Value("${stardatasets.chunk.size}")
+    private int starDatasetsChunkSize;
+
     //TODO USE THEM SOMEHOW IN THIS EXAMPLE...
 //    a JobRepository (bean name "jobRepository")
 //    a JobLauncher (bean name "jobLauncher")
@@ -57,7 +63,8 @@ public class BatchConfiguration {
     public Job job(@Qualifier("hikari") @Autowired DataSource dataSource,
                    @Autowired TaskExecutor taskExecutor,
                    @Qualifier("hikari") @Autowired JdbcTemplate jdbcTemplate) {
-        return jobs.get("exportInsurances")
+
+        return jobs.get("exportJob")
                 .incrementer(new RunIdIncrementer())
                 .flow(insurancesFromCsvToDbStep(taskExecutor))
                 .next(starDatasetsFromCsvToDbStep(taskExecutor))
@@ -105,14 +112,14 @@ public class BatchConfiguration {
     public Step starDatasetsFromCsvToDbStep(TaskExecutor taskExecutor) {
         return steps
                 .get("starDatasetsFromCsvToDbStep")
-                .<StarDataset, StarDataset>chunk(500) //TODO extract it to value
+                .<StarDataset, StarDataset>chunk(maxThreadForDatasets)
                 .reader(starDatasetReader())
                 .processor(starDatasetItemProcessor())
                 .writer(starDatasetItemWriter())
                 .listener(performanceLoggingStepExecutionListener())
                 //TODO add more listeners...
                 .taskExecutor(taskExecutor)
-                .throttleLimit(140) //TODO extract it to value
+                .throttleLimit(starDatasetsChunkSize)
                 .build();
     }
 
