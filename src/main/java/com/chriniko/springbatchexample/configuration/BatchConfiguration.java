@@ -34,6 +34,9 @@ public class BatchConfiguration {
     @Autowired
     private StepBuilderFactory steps;
 
+    @Autowired
+    private TaskExecutor taskExecutor;
+
     @Value("${max.threads.for.insurances.step}")
     private int maxThreadsForInsurances;
 
@@ -49,7 +52,7 @@ public class BatchConfiguration {
 //    a PlatformTransactionManager (bean name "transactionManager")
 
     @Bean
-    public Job job(@Autowired TaskExecutor taskExecutor) {
+    public Job job() {
         final String exportJob_Name = "exportJob";
 
         return jobs.get(exportJob_Name)
