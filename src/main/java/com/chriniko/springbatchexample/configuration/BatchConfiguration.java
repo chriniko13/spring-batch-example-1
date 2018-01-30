@@ -46,10 +46,6 @@ public class BatchConfiguration {
     @Value("${stardatasets.chunk.size}")
     private int starDatasetsChunkSize;
 
-    //TODO USE THEM SOMEHOW IN THIS EXAMPLE...
-//    a JobRepository (bean name "jobRepository")
-//    a org.springframework.batch.core.launch.JobOperator (bean name "jobOperator")
-//    a org.springframework.batch.core.explore.JobExplorer (bean name "jobExplorer")
 //    a PlatformTransactionManager (bean name "transactionManager")
 
     @Bean
