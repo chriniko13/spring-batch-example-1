@@ -12,12 +12,9 @@ import com.chriniko.springbatchexample.writer.InsuranceItemWriter;
 import com.chriniko.springbatchexample.writer.StarDatasetItemWriter;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.DuplicateJobException;
-import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.core.configuration.support.ReferenceJobFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,9 +33,6 @@ public class BatchConfiguration {
 
     @Autowired
     private StepBuilderFactory steps;
-
-    @Autowired
-    private JobRegistry jobRegistry;
 
     @Value("${max.threads.for.insurances.step}")
     private int maxThreadsForInsurances;
@@ -60,22 +54,15 @@ public class BatchConfiguration {
 
     @Bean
     public Job job(@Autowired TaskExecutor taskExecutor) {
+        final String exportJob_Name = "exportJob";
 
-        Job exportJob = jobs.get("exportJob")
+        return jobs.get(exportJob_Name)
                 .incrementer(new RunIdIncrementer())
                 .flow(insurancesFromCsvToDbStep(taskExecutor))
                 .next(starDatasetsFromCsvToDbStep(taskExecutor))
                 .end()
                 .listener(jobVerificationListener())
                 .build();
-
-        try {
-            jobRegistry.register(new ReferenceJobFactory(exportJob));
-        } catch (DuplicateJobException e) {
-            throw new RuntimeException(e);
-        }
-
-        return exportJob;
     }
 
 
