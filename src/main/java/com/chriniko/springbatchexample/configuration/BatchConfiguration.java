@@ -2,8 +2,8 @@ package com.chriniko.springbatchexample.configuration;
 
 import com.chriniko.springbatchexample.domain.Insurance;
 import com.chriniko.springbatchexample.domain.StarDataset;
-import com.chriniko.springbatchexample.listener.JobVerificationListener;
-import com.chriniko.springbatchexample.listener.PerformanceLoggingStepExecutionListener;
+import com.chriniko.springbatchexample.listener.batch.JobVerificationListener;
+import com.chriniko.springbatchexample.listener.batch.PerformanceLoggingStepExecutionListener;
 import com.chriniko.springbatchexample.processor.InsuranceItemProcessor;
 import com.chriniko.springbatchexample.processor.StarDatasetItemProcessor;
 import com.chriniko.springbatchexample.reader.InsuranceItemReader;
@@ -132,6 +132,9 @@ public class BatchConfiguration {
     public StarDatasetItemWriter starDatasetItemWriter() {
         return new StarDatasetItemWriter();
     }
+    // ------------------------- END: begin of step declaration -----------------------------
+
+    // ----------------------- START: begin of step declaration -----------------------------
     // ------------------------- END: begin of step declaration -----------------------------
 
 

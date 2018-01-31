@@ -1,4 +1,4 @@
-package com.chriniko.springbatchexample.listener;
+package com.chriniko.springbatchexample.listener.batch;
 
 import com.chriniko.springbatchexample.event.JobFinishedEvent;
 import com.chriniko.springbatchexample.verifier.StepVerifier;

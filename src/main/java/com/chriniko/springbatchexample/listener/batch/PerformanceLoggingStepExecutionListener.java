@@ -1,4 +1,4 @@
-package com.chriniko.springbatchexample.listener;
+package com.chriniko.springbatchexample.listener.batch;
 
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
