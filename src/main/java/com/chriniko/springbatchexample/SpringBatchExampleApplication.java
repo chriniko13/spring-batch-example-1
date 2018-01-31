@@ -15,4 +15,5 @@ public class SpringBatchExampleApplication {
         SpringApplication.run(SpringBatchExampleApplication.class, args);
 
     }
+
 }

@@ -62,6 +62,13 @@
 			<version>1.1.5.RELEASE</version>
 		</dependency>
 
+		<!-- Spring Aspects (used from Spring Retry) -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aspects</artifactId>
+			<version>4.3.13.RELEASE</version>
+		</dependency>
+
 
 		<!-- TEST DEPENDENCIES -->
 		<!-- Spring Boot Test -->

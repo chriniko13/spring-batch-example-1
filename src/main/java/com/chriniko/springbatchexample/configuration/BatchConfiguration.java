@@ -8,6 +8,7 @@ import com.chriniko.springbatchexample.processor.InsuranceItemProcessor;
 import com.chriniko.springbatchexample.processor.StarDatasetItemProcessor;
 import com.chriniko.springbatchexample.reader.InsuranceItemReader;
 import com.chriniko.springbatchexample.reader.StarDatasetReader;
+import com.chriniko.springbatchexample.task.ErroneousTasklet;
 import com.chriniko.springbatchexample.writer.InsuranceItemWriter;
 import com.chriniko.springbatchexample.writer.StarDatasetItemWriter;
 import org.springframework.batch.core.Job;
@@ -53,12 +54,13 @@ public class BatchConfiguration {
 
     @Bean
     public Job job() {
-        final String exportJob_Name = "exportJob";
+        final String exportJob_Name = "exportJob#3";
 
         return jobs.get(exportJob_Name)
                 .incrementer(new RunIdIncrementer())
                 .flow(insurancesFromCsvToDbStep(taskExecutor))
                 .next(starDatasetsFromCsvToDbStep(taskExecutor))
+                .next(sampleTaskletStep(taskExecutor))
                 .end()
                 .listener(jobVerificationListener())
                 .build();
@@ -138,7 +140,18 @@ public class BatchConfiguration {
     // ----------------------- START: begin of step declaration -----------------------------
 
     //TODO create a job which will occasionally fail, but we will have used our basic RetryTemplate...
+    @Bean
+    public Step sampleTaskletStep(TaskExecutor taskExecutor) {
+        final String sampleTaskletStep = "sampleTaskletStep";
 
+        return steps
+                .get(sampleTaskletStep)
+                .tasklet(new ErroneousTasklet())
+                .listener(performanceLoggingStepExecutionListener())
+                .taskExecutor(taskExecutor)
+                .throttleLimit(1) //TODO extract it to config. value.
+                .build();
+    }
 
     // ------------------------- END: begin of step declaration -----------------------------
 

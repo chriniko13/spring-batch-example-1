@@ -61,7 +61,7 @@ public class JobVerificationListener implements JobExecutionListener, Applicatio
             }
 
 
-            System.out.println(Thread.currentThread().getName() + " --- ExportInsurancesVerificationListener#afterJob --- going to publish event: JobFinishedEvent");
+            System.out.println("\n" + Thread.currentThread().getName() + " --- JobVerificationListener#afterJob --- going to publish event: JobFinishedEvent");
             applicationEventPublisher.publishEvent(new JobFinishedEvent(this, jobExecution.getJobConfigurationName()));
         }
     }

@@ -17,7 +17,7 @@ public class JobFinishedEventSubscriber implements ApplicationListener<JobFinish
     @Override
     public void onApplicationEvent(JobFinishedEvent event) {
 
-        System.out.println(Thread.currentThread().getName() + " --- JobFinishedEventSubscriber#onApplicationEvent --- processing event: " + event);
+        System.out.println("\n" + Thread.currentThread().getName() + " --- JobFinishedEventSubscriber#onApplicationEvent --- processing event: " + event);
 
         countDownLatchForTaskExecutor.countDown();
     }
