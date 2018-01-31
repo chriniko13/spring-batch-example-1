@@ -1,6 +1,5 @@
 package com.chriniko.springbatchexample;
 
-import com.chriniko.springbatchexample.configuration.BasicConfiguration;
 import com.chriniko.springbatchexample.configuration.BatchConfiguration;
 import org.junit.Assert;
 import org.junit.Test;

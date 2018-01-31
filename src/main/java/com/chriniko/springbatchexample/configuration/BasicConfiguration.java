@@ -29,13 +29,13 @@ public class BasicConfiguration {
 
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 
-        taskExecutor.setCorePoolSize(70);
-        taskExecutor.setMaxPoolSize(140);
+        taskExecutor.setCorePoolSize(100);
+        taskExecutor.setMaxPoolSize(200);
 
         taskExecutor.setAllowCoreThreadTimeOut(false);
-        taskExecutor.setKeepAliveSeconds(7);
+        taskExecutor.setKeepAliveSeconds(15);
 
-        taskExecutor.setQueueCapacity(200);
+        taskExecutor.setQueueCapacity(0);
 
         taskExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         taskExecutor.setThreadNamePrefix("spring-batch-worker");
@@ -58,11 +58,12 @@ public class BasicConfiguration {
     public DataSource dataSource() {
 
         HikariConfig hikariConfig = new HikariConfig();
-        hikariConfig.setMaximumPoolSize(130);
+        hikariConfig.setMaximumPoolSize(140);
         hikariConfig.setUsername("root");
         hikariConfig.setPassword("nikos");
         hikariConfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
         hikariConfig.setJdbcUrl("jdbc:mysql://localhost/spring_batch_example?useSSL=false");
+        hikariConfig.setConnectionTimeout(30000);
 
         return new HikariDataSource(hikariConfig);
     }
@@ -70,14 +71,15 @@ public class BasicConfiguration {
     @Qualifier("hikari")
     @Bean
     public TransactionTemplate transactionTemplate() {
+
         DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dataSource());
+        dataSourceTransactionManager.setDefaultTimeout(30);
 
         TransactionTemplate transactionTemplate = new TransactionTemplate(dataSourceTransactionManager);
-
-        transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_UNCOMMITTED);
-        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_DEFAULT);
+        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         transactionTemplate.setReadOnly(false);
-        transactionTemplate.setTimeout(10);
+        transactionTemplate.setTimeout(30);
 
         return transactionTemplate;
     }
