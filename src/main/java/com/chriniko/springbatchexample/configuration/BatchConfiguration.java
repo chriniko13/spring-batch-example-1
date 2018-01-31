@@ -134,7 +134,12 @@ public class BatchConfiguration {
     }
     // ------------------------- END: begin of step declaration -----------------------------
 
+
     // ----------------------- START: begin of step declaration -----------------------------
+
+    //TODO create a job which will occasionally fail, but we will have used our basic RetryTemplate...
+
+
     // ------------------------- END: begin of step declaration -----------------------------
 
 
