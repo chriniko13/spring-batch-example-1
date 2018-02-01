@@ -50,7 +50,7 @@ public class BatchConfiguration {
     @Value("${stardatasets.chunk.size}")
     private int starDatasetsChunkSize;
 
-//    a PlatformTransactionManager (bean name "transactionManager")
+//    a PlatformTransactionManager (bean name "transactionManager") TODO add it...
 
     @Bean
     public Job job() {
