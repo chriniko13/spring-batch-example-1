@@ -2,6 +2,7 @@ package com.chriniko.springbatchexample.configuration;
 
 import com.chriniko.springbatchexample.domain.Insurance;
 import com.chriniko.springbatchexample.domain.StarDataset;
+import com.chriniko.springbatchexample.listener.batch.DefaultChunkListener;
 import com.chriniko.springbatchexample.listener.batch.JobVerificationListener;
 import com.chriniko.springbatchexample.listener.batch.PerformanceLoggingStepExecutionListener;
 import com.chriniko.springbatchexample.processor.InsuranceItemProcessor;
@@ -11,12 +12,14 @@ import com.chriniko.springbatchexample.reader.StarDatasetReader;
 import com.chriniko.springbatchexample.task.ErroneousTasklet;
 import com.chriniko.springbatchexample.writer.InsuranceItemWriter;
 import com.chriniko.springbatchexample.writer.StarDatasetItemWriter;
+import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.support.transaction.ResourcelessTransactionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,8 +85,8 @@ public class BatchConfiguration {
                 .processor(insuranceItemProcessor())
                 .writer(insuranceJdbcBatchItemWriter())
                 .listener(performanceLoggingStepExecutionListener())
+                //.listener(defaultChunkListener()) // Note: comment-uncomment.
                 .transactionManager(platformTransactionManager())
-                //TODO add more listeners...
                 .taskExecutor(taskExecutor)
                 .throttleLimit(maxThreadsForInsurances)
                 .build();
@@ -118,8 +121,8 @@ public class BatchConfiguration {
                 .processor(starDatasetItemProcessor())
                 .writer(starDatasetItemWriter())
                 .listener(performanceLoggingStepExecutionListener())
+                //.listener(defaultChunkListener()) // Note: comment-uncomment.
                 .transactionManager(platformTransactionManager())
-                //TODO add more listeners...
                 .taskExecutor(taskExecutor)
                 .throttleLimit(starDatasetsChunkSize)
                 .build();
@@ -158,6 +161,7 @@ public class BatchConfiguration {
                 .tasklet(erroneousTasklet)
                 .transactionManager(platformTransactionManager())
                 .listener(performanceLoggingStepExecutionListener())
+                //.listener(defaultChunkListener()) // Note: comment-uncomment.
                 .taskExecutor(taskExecutor)
                 .throttleLimit(maxThreadsForErroneousTasklet)
                 .build();
@@ -175,6 +179,11 @@ public class BatchConfiguration {
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
     public PerformanceLoggingStepExecutionListener performanceLoggingStepExecutionListener() {
         return new PerformanceLoggingStepExecutionListener();
+    }
+
+    @Bean
+    public DefaultChunkListener defaultChunkListener() {
+        return new DefaultChunkListener();
     }
     // ------------------------- END: begin of util for steps -----------------------------
 
