@@ -59,8 +59,8 @@ public class BatchConfiguration {
         return jobs.get(exportJob_Name)
                 .incrementer(new RunIdIncrementer())
                 .flow(insurancesFromCsvToDbStep(taskExecutor))
-                .next(starDatasetsFromCsvToDbStep(taskExecutor))
                 .next(sampleTaskletStep(taskExecutor))
+                .next(starDatasetsFromCsvToDbStep(taskExecutor))
                 .end()
                 .listener(jobVerificationListener())
                 .build();
@@ -138,21 +138,21 @@ public class BatchConfiguration {
 
 
     // ----------------------- START: begin of step declaration -----------------------------
+    @Autowired
+    private ErroneousTasklet erroneousTasklet;
 
-    //TODO create a job which will occasionally fail, but we will have used our basic RetryTemplate...
     @Bean
     public Step sampleTaskletStep(TaskExecutor taskExecutor) {
         final String sampleTaskletStep = "sampleTaskletStep";
 
         return steps
                 .get(sampleTaskletStep)
-                .tasklet(new ErroneousTasklet())
+                .tasklet(erroneousTasklet)
                 .listener(performanceLoggingStepExecutionListener())
                 .taskExecutor(taskExecutor)
                 .throttleLimit(1) //TODO extract it to config. value.
                 .build();
     }
-
     // ------------------------- END: begin of step declaration -----------------------------
 
 

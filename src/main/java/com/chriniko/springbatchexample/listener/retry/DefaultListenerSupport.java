@@ -8,16 +8,17 @@ public class DefaultListenerSupport  implements RetryListener {
 
     @Override
     public <T, E extends Throwable> boolean open(RetryContext context, RetryCallback<T, E> callback) {
-        return false;
+        System.out.println("DefaultListenerSupport#open");
+        return true;
     }
 
     @Override
     public <T, E extends Throwable> void close(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-
+        System.out.println("DefaultListenerSupport#close");
     }
 
     @Override
     public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-
+        System.out.println("DefaultListenerSupport#onError");
     }
 }
