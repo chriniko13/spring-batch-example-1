@@ -17,6 +17,7 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.support.transaction.ResourcelessTransactionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -24,6 +25,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @EnableBatchProcessing
@@ -50,8 +52,8 @@ public class BatchConfiguration {
     @Value("${stardatasets.chunk.size}")
     private int starDatasetsChunkSize;
 
-//    a PlatformTransactionManager (bean name "transactionManager") TODO add it...
 
+    // ------------------------ START: begin of job declaration -------------------------------
     @Bean
     public Job job() {
         final String exportJob_Name = "exportJob#3";
@@ -65,6 +67,7 @@ public class BatchConfiguration {
                 .listener(jobVerificationListener())
                 .build();
     }
+    // ------------------------ END: begin of job declaration ---------------------------------
 
 
     // ----------------------- START: begin of step declaration -----------------------------
@@ -79,6 +82,7 @@ public class BatchConfiguration {
                 .processor(insuranceItemProcessor())
                 .writer(insuranceJdbcBatchItemWriter())
                 .listener(performanceLoggingStepExecutionListener())
+                .transactionManager(platformTransactionManager())
                 //TODO add more listeners...
                 .taskExecutor(taskExecutor)
                 .throttleLimit(maxThreadsForInsurances)
@@ -114,6 +118,7 @@ public class BatchConfiguration {
                 .processor(starDatasetItemProcessor())
                 .writer(starDatasetItemWriter())
                 .listener(performanceLoggingStepExecutionListener())
+                .transactionManager(platformTransactionManager())
                 //TODO add more listeners...
                 .taskExecutor(taskExecutor)
                 .throttleLimit(starDatasetsChunkSize)
@@ -141,6 +146,9 @@ public class BatchConfiguration {
     @Autowired
     private ErroneousTasklet erroneousTasklet;
 
+    @Value("${max.threads.for.erroneous.tasklet}")
+    private int maxThreadsForErroneousTasklet;
+
     @Bean
     public Step sampleTaskletStep(TaskExecutor taskExecutor) {
         final String sampleTaskletStep = "sampleTaskletStep";
@@ -148,9 +156,10 @@ public class BatchConfiguration {
         return steps
                 .get(sampleTaskletStep)
                 .tasklet(erroneousTasklet)
+                .transactionManager(platformTransactionManager())
                 .listener(performanceLoggingStepExecutionListener())
                 .taskExecutor(taskExecutor)
-                .throttleLimit(1) //TODO extract it to config. value.
+                .throttleLimit(maxThreadsForErroneousTasklet)
                 .build();
     }
     // ------------------------- END: begin of step declaration -----------------------------
@@ -168,5 +177,13 @@ public class BatchConfiguration {
         return new PerformanceLoggingStepExecutionListener();
     }
     // ------------------------- END: begin of util for steps -----------------------------
+
+
+    // ----------------------- START: begin of util for jobs -----------------------------
+    @Bean
+    public PlatformTransactionManager platformTransactionManager() {
+        return new ResourcelessTransactionManager();
+    }
+    // ------------------------- END: begin of util for jobs -----------------------------
 
 }
